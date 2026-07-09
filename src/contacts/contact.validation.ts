@@ -15,7 +15,5 @@ export const listContactsQuerySchema = z.object({
     .transform((value) => value === "1" || value === "true"),
   search: z.string().trim().min(1).max(100).optional(),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(15),
-  sort_by: z.enum(["created_at", "first_name", "last_name", "email"]).default("created_at"),
-  sort_order: z.enum(["asc", "desc"]).default("desc")
+  limit: z.coerce.number().int().positive().max(100).default(15)
 });

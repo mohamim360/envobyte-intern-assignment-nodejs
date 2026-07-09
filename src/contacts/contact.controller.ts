@@ -5,6 +5,10 @@ import { presentContact, presentContacts } from "./contact.presenter";
 import { contactService } from "./contact.service";
 import { listContactsQuerySchema, updateContactNoteSchema } from "./contact.validation";
 
+function contactIdFromParams(id: string | string[]) {
+  return Array.isArray(id) ? id[0] : id;
+}
+
 export const listContacts: RequestHandler = asyncHandler(async (req, res) => {
   const query = listContactsQuerySchema.parse(req.query);
   const result = await contactService.listContacts({
@@ -12,9 +16,7 @@ export const listContacts: RequestHandler = asyncHandler(async (req, res) => {
     favorite: query.favorite,
     search: query.search,
     page: query.page,
-    limit: query.limit,
-    sortBy: query.sort_by,
-    sortOrder: query.sort_order
+    limit: query.limit
   });
 
   return sendData(res, presentContacts(result.contacts), result.pagination);
@@ -26,7 +28,7 @@ export const getContactStats: RequestHandler = asyncHandler(async (req, res) => 
 });
 
 export const getContact: RequestHandler = asyncHandler(async (req, res) => {
-  const contact = await contactService.getContact(req.auth.accountId, req.params.id);
+  const contact = await contactService.getContact(req.auth.accountId, contactIdFromParams(req.params.id));
   return sendData(res, presentContact(contact));
 });
 
@@ -36,17 +38,28 @@ export const listFavoriteContacts: RequestHandler = asyncHandler(async (req, res
 });
 
 export const markContactFavorite: RequestHandler = asyncHandler(async (req, res) => {
-  const contact = await contactService.setFavorite(req.auth.accountId, req.params.id, true);
+  const contact = await contactService.setFavorite(
+    req.auth.accountId,
+    contactIdFromParams(req.params.id),
+    true
+  );
   return sendData(res, presentContact(contact));
 });
 
 export const removeContactFavorite: RequestHandler = asyncHandler(async (req, res) => {
-  const contact = await contactService.setFavorite(req.auth.accountId, req.params.id, false);
+  const contact = await contactService.setFavorite(
+    req.auth.accountId,
+    contactIdFromParams(req.params.id),
+    false
+  );
   return sendData(res, presentContact(contact));
 });
 
 export const toggleContactFavorite: RequestHandler = asyncHandler(async (req, res) => {
-  const contact = await contactService.toggleFavorite(req.auth.accountId, req.params.id);
+  const contact = await contactService.toggleFavorite(
+    req.auth.accountId,
+    contactIdFromParams(req.params.id)
+  );
   return sendData(res, presentContact(contact));
 });
 
@@ -54,7 +67,7 @@ export const updateContactNote: RequestHandler = asyncHandler(async (req, res) =
   const payload = updateContactNoteSchema.parse(req.body);
   const contact = await contactService.updateNote(
     req.auth.accountId,
-    req.params.id,
+    contactIdFromParams(req.params.id),
     payload.personal_note
   );
 

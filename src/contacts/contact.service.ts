@@ -9,8 +9,6 @@ interface ListContactsInput {
   search?: string;
   page: number;
   limit: number;
-  sortBy: "created_at" | "first_name" | "last_name" | "email";
-  sortOrder: "asc" | "desc";
 }
 
 function assertValidContactId(contactId: string) {
@@ -76,12 +74,10 @@ export class ContactService {
       search: input.search
     });
     const skip = (input.page - 1) * input.limit;
-    const sortField = input.sortBy === "created_at" ? "createdAt" : input.sortBy;
-    const sortDirection = input.sortOrder === "asc" ? 1 : -1;
 
     const [contacts, total] = await Promise.all([
       Contact.find(filter)
-        .sort({ [sortField]: sortDirection, _id: sortDirection })
+        .sort({ createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(input.limit)
         .exec(),
