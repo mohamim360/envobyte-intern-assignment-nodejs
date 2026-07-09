@@ -3,6 +3,12 @@ import { sendData } from "../shared/api-response";
 import { asyncHandler } from "../shared/async-handler";
 import { presentContact, presentContacts } from "./contact.presenter";
 import { contactService } from "./contact.service";
+import { updateContactNoteSchema } from "./contact.validation";
+
+export const getContact: RequestHandler = asyncHandler(async (req, res) => {
+  const contact = await contactService.getContact(req.auth.accountId, req.params.id);
+  return sendData(res, presentContact(contact));
+});
 
 export const listFavoriteContacts: RequestHandler = asyncHandler(async (req, res) => {
   const contacts = await contactService.listFavorites(req.auth.accountId);
@@ -21,5 +27,16 @@ export const removeContactFavorite: RequestHandler = asyncHandler(async (req, re
 
 export const toggleContactFavorite: RequestHandler = asyncHandler(async (req, res) => {
   const contact = await contactService.toggleFavorite(req.auth.accountId, req.params.id);
+  return sendData(res, presentContact(contact));
+});
+
+export const updateContactNote: RequestHandler = asyncHandler(async (req, res) => {
+  const payload = updateContactNoteSchema.parse(req.body);
+  const contact = await contactService.updateNote(
+    req.auth.accountId,
+    req.params.id,
+    payload.personal_note
+  );
+
   return sendData(res, presentContact(contact));
 });

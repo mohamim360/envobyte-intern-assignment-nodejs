@@ -9,6 +9,18 @@ function assertValidContactId(contactId: string) {
 }
 
 export class ContactService {
+  async getContact(accountId: string, contactId: string) {
+    assertValidContactId(contactId);
+
+    const contact = await Contact.findOne({ _id: contactId, account_id: accountId }).exec();
+
+    if (!contact) {
+      throw ApiError.notFound("Contact not found");
+    }
+
+    return contact;
+  }
+
   async listFavorites(accountId: string) {
     return Contact.find({ account_id: accountId, is_favorite: true })
       .sort({ createdAt: -1 })
@@ -42,6 +54,22 @@ export class ContactService {
 
     contact.is_favorite = !contact.is_favorite;
     return contact.save();
+  }
+
+  async updateNote(accountId: string, contactId: string, personalNote: string | null) {
+    assertValidContactId(contactId);
+
+    const contact = await Contact.findOneAndUpdate(
+      { _id: contactId, account_id: accountId },
+      { $set: { personal_note: personalNote } },
+      { new: true, runValidators: true }
+    ).exec();
+
+    if (!contact) {
+      throw ApiError.notFound("Contact not found");
+    }
+
+    return contact;
   }
 }
 
