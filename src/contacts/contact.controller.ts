@@ -20,6 +20,11 @@ export const listContacts: RequestHandler = asyncHandler(async (req, res) => {
   return sendData(res, presentContacts(result.contacts), result.pagination);
 });
 
+export const getContactStats: RequestHandler = asyncHandler(async (req, res) => {
+  const stats = await contactService.getStats(req.auth.accountId);
+  return sendData(res, stats);
+});
+
 export const getContact: RequestHandler = asyncHandler(async (req, res) => {
   const contact = await contactService.getContact(req.auth.accountId, req.params.id);
   return sendData(res, presentContact(contact));

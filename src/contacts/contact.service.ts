@@ -20,6 +20,55 @@ function assertValidContactId(contactId: string) {
 }
 
 export class ContactService {
+  async getStats(accountId: string) {
+    const [stats] = await Contact.aggregate<{
+      total_contacts: number;
+      favorite_contacts: number;
+      contacts_with_notes: number;
+    }>([
+      { $match: { account_id: accountId } },
+      {
+        $group: {
+          _id: null,
+          total_contacts: { $sum: 1 },
+          favorite_contacts: {
+            $sum: { $cond: [{ $eq: ["$is_favorite", true] }, 1, 0] }
+          },
+          contacts_with_notes: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ["$personal_note", null] },
+                    { $ne: ["$personal_note", ""] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          total_contacts: 1,
+          favorite_contacts: 1,
+          contacts_with_notes: 1
+        }
+      }
+    ]).exec();
+
+    return (
+      stats ?? {
+        total_contacts: 0,
+        favorite_contacts: 0,
+        contacts_with_notes: 0
+      }
+    );
+  }
+
   async listContacts(input: ListContactsInput) {
     const filter = buildContactFilter({
       accountId: input.accountId,

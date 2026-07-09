@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getContact,
+  getContactStats,
   listContacts,
   listFavoriteContacts,
   markContactFavorite,
@@ -12,6 +13,7 @@ import {
 export const contactRouter = Router();
 
 contactRouter.get("/favorites", listFavoriteContacts);
+contactRouter.get("/stats", getContactStats);
 contactRouter.get("/", listContacts);
 contactRouter.post("/:id/favorite", markContactFavorite);
 contactRouter.delete("/:id/favorite", removeContactFavorite);
