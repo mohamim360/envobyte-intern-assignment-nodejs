@@ -1,6 +1,17 @@
 import { isValidObjectId } from "mongoose";
 import { ApiError } from "../shared/api-error";
 import { Contact } from "./contact.model";
+import { buildContactFilter } from "./contact.query";
+
+interface ListContactsInput {
+  accountId: string;
+  favorite?: boolean;
+  search?: string;
+  page: number;
+  limit: number;
+  sortBy: "created_at" | "first_name" | "last_name" | "email";
+  sortOrder: "asc" | "desc";
+}
 
 function assertValidContactId(contactId: string) {
   if (!isValidObjectId(contactId)) {
@@ -9,6 +20,36 @@ function assertValidContactId(contactId: string) {
 }
 
 export class ContactService {
+  async listContacts(input: ListContactsInput) {
+    const filter = buildContactFilter({
+      accountId: input.accountId,
+      favorite: input.favorite,
+      search: input.search
+    });
+    const skip = (input.page - 1) * input.limit;
+    const sortField = input.sortBy === "created_at" ? "createdAt" : input.sortBy;
+    const sortDirection = input.sortOrder === "asc" ? 1 : -1;
+
+    const [contacts, total] = await Promise.all([
+      Contact.find(filter)
+        .sort({ [sortField]: sortDirection, _id: sortDirection })
+        .skip(skip)
+        .limit(input.limit)
+        .exec(),
+      Contact.countDocuments(filter).exec()
+    ]);
+
+    return {
+      contacts,
+      pagination: {
+        current_page: input.page,
+        per_page: input.limit,
+        last_page: Math.max(Math.ceil(total / input.limit), 1),
+        total_items: total
+      }
+    };
+  }
+
   async getContact(accountId: string, contactId: string) {
     assertValidContactId(contactId);
 

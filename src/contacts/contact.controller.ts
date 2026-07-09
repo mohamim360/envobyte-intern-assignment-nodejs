@@ -3,7 +3,22 @@ import { sendData } from "../shared/api-response";
 import { asyncHandler } from "../shared/async-handler";
 import { presentContact, presentContacts } from "./contact.presenter";
 import { contactService } from "./contact.service";
-import { updateContactNoteSchema } from "./contact.validation";
+import { listContactsQuerySchema, updateContactNoteSchema } from "./contact.validation";
+
+export const listContacts: RequestHandler = asyncHandler(async (req, res) => {
+  const query = listContactsQuerySchema.parse(req.query);
+  const result = await contactService.listContacts({
+    accountId: req.auth.accountId,
+    favorite: query.favorite,
+    search: query.search,
+    page: query.page,
+    limit: query.limit,
+    sortBy: query.sort_by,
+    sortOrder: query.sort_order
+  });
+
+  return sendData(res, presentContacts(result.contacts), result.pagination);
+});
 
 export const getContact: RequestHandler = asyncHandler(async (req, res) => {
   const contact = await contactService.getContact(req.auth.accountId, req.params.id);
