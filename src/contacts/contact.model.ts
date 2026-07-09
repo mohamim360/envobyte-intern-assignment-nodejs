@@ -22,6 +22,17 @@ const contactSchema = new Schema(
       required: true,
       lowercase: true,
       trim: true
+    },
+    is_favorite: {
+      type: Boolean,
+      required: true,
+      default: false,
+      index: true
+    },
+    personal_note: {
+      type: String,
+      default: null,
+      trim: true
     }
   },
   {
@@ -31,6 +42,7 @@ const contactSchema = new Schema(
 );
 
 contactSchema.index({ account_id: 1, createdAt: -1 });
+contactSchema.index({ account_id: 1, is_favorite: 1, createdAt: -1 });
 
 export type ContactDocument = InferSchemaType<typeof contactSchema>;
 
