@@ -1,0 +1,48 @@
+import { isValidObjectId } from "mongoose";
+import { ApiError } from "../shared/api-error";
+import { Contact } from "./contact.model";
+
+function assertValidContactId(contactId: string) {
+  if (!isValidObjectId(contactId)) {
+    throw ApiError.notFound("Contact not found");
+  }
+}
+
+export class ContactService {
+  async listFavorites(accountId: string) {
+    return Contact.find({ account_id: accountId, is_favorite: true })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async setFavorite(accountId: string, contactId: string, isFavorite: boolean) {
+    assertValidContactId(contactId);
+
+    const contact = await Contact.findOneAndUpdate(
+      { _id: contactId, account_id: accountId },
+      { $set: { is_favorite: isFavorite } },
+      { new: true, runValidators: true }
+    ).exec();
+
+    if (!contact) {
+      throw ApiError.notFound("Contact not found");
+    }
+
+    return contact;
+  }
+
+  async toggleFavorite(accountId: string, contactId: string) {
+    assertValidContactId(contactId);
+
+    const contact = await Contact.findOne({ _id: contactId, account_id: accountId }).exec();
+
+    if (!contact) {
+      throw ApiError.notFound("Contact not found");
+    }
+
+    contact.is_favorite = !contact.is_favorite;
+    return contact.save();
+  }
+}
+
+export const contactService = new ContactService();
